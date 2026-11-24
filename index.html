@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpha Trading Pro — Bot Trader</title>
+<link rel="icon" type="image/png" href="logo-wide.png">
+<style>
+  :root{--bg:#0b0e13;--card:#141922;--card2:#1a2130;--line:#262f42;--txt:#e8edf5;--mut:#8b96ab;--grn:#22c55e;--red:#ef4444;--acc:#4f8cff}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px}
+  header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  h1{font-size:20px;letter-spacing:.06em;margin:0} h1 .p{color:var(--acc)}
+  .net{font-size:26px;font-weight:800;text-align:right}
+  .sub{color:var(--mut);font-size:12px}
+  .dots{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .dot{border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;background:var(--card)}
+  .on{color:var(--grn)} .off{color:var(--red)}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:900px){.grid{grid-template-columns:1.6fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h2{font-size:13px;letter-spacing:.06em;margin:0 0 10px}
+  .pos{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--card2);display:flex;justify-content:space-between;gap:10px}
+  .pos b{font-size:15px} .mut{color:var(--mut);font-size:12px}
+  .pl{text-align:right;font-weight:700} .pos .pl span{display:block;font-size:12px}
+  button{cursor:pointer;border-radius:9px;border:1px solid var(--line);background:#232c40;color:var(--txt);padding:7px 12px;font-weight:600}
+  button:hover{border-color:var(--acc)} button:disabled{opacity:.45;cursor:not-allowed}
+  .danger{background:#7f1d1d;border-color:#991b1b;color:#fff}
+  .rowbtns{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  .rowbtns button{flex:1;padding:11px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+  .g{color:var(--grn)} .r{color:var(--red)}
+  .sys{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .sw{position:relative;width:62px;height:30px;border-radius:15px;border:1px solid var(--line);background:#343945;cursor:pointer;padding:0;flex:none}
+  .sw .knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#8b93a3;transition:left .15s ease,background .15s ease}
+  .sw .swtx{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;letter-spacing:.5px;color:#9aa3b2;right:7px}
+  .sw.on{background:#14532d;border-color:#22c55e}
+  .sw.on .knob{left:34px;background:#4ade80}
+  .sw.on .swtx{color:#bbf7d0;right:auto;left:8px}
+  .tag{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--mut)}
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  #modal .box{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:420px;width:100%;padding:18px}
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1f2937;border:1px solid var(--line);color:var(--txt);padding:10px 16px;border-radius:10px;display:none;z-index:60;font-size:14px}
+  input[type=password],input[type=text]{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--txt)}
+  .stale{color:#f59e0b;font-weight:700}
+  footer{color:var(--mut);font-size:12px;margin:14px 0;text-align:center}
+  #lock{position:fixed;inset:0;background:var(--bg,#0b0f14);z-index:99;display:flex;align-items:center;justify-content:center}
+  #lock .box{text-align:center;max-width:300px;width:90%}
+  #lock h1{letter-spacing:2px}
+  #lock input{text-align:center;font-size:22px;letter-spacing:6px;margin:14px 0}
+  #lockErr{color:#f87171;min-height:20px;font-size:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{height:62px;width:auto;max-width:64vw;border-radius:11px;border:1px solid var(--line);background:#000}
+  .brand .t2{font-size:11px;font-weight:700;letter-spacing:.34em;color:var(--acc);margin-top:5px}
+  #lock .box img{width:270px;max-width:80vw;height:auto;border-radius:14px;border:1px solid var(--line);background:#000;margin-bottom:10px}
+  #lockPass{letter-spacing:1px;font-size:17px}
+  .modalov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:flex;align-items:center;justify-content:center}
+  .modalov .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:320px;width:90%;text-align:center}
+  .modalov input{width:100%;margin:8px 0;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--txt)}
+  #pwErr{color:#f87171;min-height:20px;font-size:14px}
+  h2{border-left:3px solid var(--acc);padding-left:9px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--txt);cursor:pointer;font-weight:600;font-size:13px}
+  .chip.on{border-color:var(--grn);color:#86efac;background:rgba(34,197,94,.14)}
+  .chip.off{border-color:var(--red);color:#fca5a5;background:rgba(239,68,68,.10)}
+  .chip.blocked{border-color:var(--red);color:#fca5a5;text-decoration:none;opacity:1}
+  #blockInput{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;text-transform:uppercase}
+  .daybar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+  .daybar button{padding:5px 12px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--txt);cursor:pointer}
+  .daybar button.on{background:#2563eb;color:#fff;border-color:#2563eb}
+  .daybar input[type=date]{padding:4px 8px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--txt)}
+</style>
+</head>
+<body>
+<div id="lock" style="display:none">
+  <div class="box">
+    <img src="logo-wide.png" alt="Alpha Trading Pro">
+    <div class="sub" style="letter-spacing:.3em;font-weight:700;color:var(--acc);font-size:13px">BOT TRADER</div>
+    <div class="sub" id="lockLabel">Enter your password</div>
+    <input type="password" id="lockPass" autocomplete="off" placeholder="Password">
+    <input type="password" id="lockCode" inputmode="numeric" autocomplete="off" placeholder="••••" style="display:none">
+    <div id="lockErr"></div>
+    <button class="btn primary" id="lockBtn" style="width:100%">Unlock</button>
+    <div style="margin-top:10px;font-size:13px"><a href="#" id="codeModeLink" style="color:var(--mut)">Use the 4-digit code on this device instead</a></div>
+  </div>
+</div>
+<div id="pwModal" class="modalov" style="display:none">
+  <div class="box">
+    <div class="sub" style="font-weight:700">Set your app password</div>
+    <div class="mut" style="font-size:13px;margin:8px 0">8+ characters. This password unlocks the app on ANY device. It never leaves this device — it only seals your key.</div>
+    <input type="password" id="pwNew1" autocomplete="new-password" placeholder="New password">
+    <input type="password" id="pwNew2" autocomplete="new-password" placeholder="Repeat password">
+    <div id="pwErr"></div>
+    <button class="btn primary" id="pwSetBtn" style="width:100%">Set password</button>
+    <button class="btn" id="pwCancelBtn" style="width:100%;margin-top:8px">Cancel</button>
+  </div>
+</div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div>
+        <img src="logo-wide.png" alt="Alpha Trading Pro">
+        <div class="t2">BOT TRADER</div>
+        <div class="sub" id="snapLine">Loading…</div>
+      </div>
+    </div>
+    <div>
+      <div class="net" id="netLiq">—</div>
+      <div class="sub" style="text-align:right">NetLiq · Day P/L <b id="dayPnl">—</b></div>
+    </div>
+  </header>
+
+  <div id="cmdPill" style="display:none;margin:0 0 10px;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:700;text-align:center;border:1px solid var(--line)"></div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="rowbtns">
+    <button id="refreshBtn">↻ Refresh</button>
+    <button class="danger" id="flattenBtn">FLATTEN ALL</button>
+    <button id="keyBtn">🔑 Command key</button>
+    <button id="pwBtn">🔐 App password</button>
+  </div>
+  <div class="sub" id="keyState" style="margin-bottom:10px"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>OPEN POSITIONS</h2>
+      <div class="mut" style="margin-bottom:6px">STYLE 1 • POSTED ALERTS</div>
+      <div id="posPosted"></div>
+      <div class="mut" style="margin:12px 0 6px">STYLE 1B • POSTED ALERTS — BEARISH</div>
+      <div id="posPostedBearish"></div>
+      <div class="mut" style="margin:12px 0 6px">STYLE 2 • PLAYBOOK VWAP RETEST</div>
+      <div id="posPlaybook"></div>
+      <div class="mut" style="margin:12px 0 6px">STYLE 3 • SPY VWAP PICTURE-PERFECT</div>
+      <div id="posSpy"></div>
+      <div class="mut" style="margin:12px 0 6px">STYLE 4 • SPY VWAP EVERY-TOUCH</div>
+      <div id="posStyle4"></div>
+      <div id="posOther"></div>
+      <div class="mut" style="margin:14px 0 6px">ORDERS WAITING TO FILL</div>
+      <div id="openOrders"></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h2>TRADES — <span id="tradesDayLabel">TODAY</span></h2>
+        <div class="daybar">
+          <button id="dayToday" class="on">Today</button>
+          <button id="dayYday">Yesterday</button>
+          <input type="date" id="dayPick">
+        </div>
+        <div id="tradesSummary" class="mut" style="margin-bottom:6px"></div>
+        <table><tbody id="tradesBody"></tbody></table>
+      </div>
+      <div class="card">
+        <h2>SYSTEMS</h2>
+        <div id="systems"></div>
+        <div class="mut" style="margin:14px 0 4px">PLAYBOOK NAMES — <span style="color:#86efac">green trades</span> · <span style="color:#fca5a5">red doesn't</span> · tap a name to switch it</div>
+        <div id="pbAll" class="chips"></div>
+        <div class="mut" style="margin:14px 0 4px">POSTED ALERTS — blocked names are never traded (tap × to unblock)</div>
+        <div id="postedBlocked" class="chips"></div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <input id="blockInput" placeholder="Ticker to block — e.g. TSLA" maxlength="8">
+          <button id="blockBtn">Block</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>COMMAND LOG</h2>
+        <div id="cmdLog" class="mut">No commands yet today.</div>
+      </div>
+    </div>
+  </div>
+  <footer>Broker is ground truth · Paper account only · AlphaPilot</footer>
+</div>
+
+<div id="modal"><div class="box">
+  <div id="modalTitle" style="font-weight:800;font-size:16px;margin-bottom:8px"></div>
+  <div id="modalBody" class="mut" style="margin-bottom:14px;line-height:1.5"></div>
+  <div style="display:flex;gap:8px">
+    <button id="modalCancel" style="flex:1">Cancel</button>
+    <button id="modalOk" class="danger" style="flex:1">Confirm</button>
+  </div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+const REPO = "mankhem/alphapilot-data";
+const API = "https://api.github.com/repos/" + REPO + "/contents/";
+const DATA_URL = "https://cdn.jsdelivr.net/gh/mankhem/alphapilot-data@data/data.json";
+const CMDS_URL = "https://cdn.jsdelivr.net/gh/mankhem/alphapilot-data@data/commands.json";
+let SNAP = null, pendingAction = null, viewDate = null, histCache = {};
+
+const $ = id => document.getElementById(id);
+const money = n => (n==null||isNaN(n)) ? "—" : (n<0?"-$":"$") + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const cls = n => n>=0 ? "g" : "r";
+function toast(msg, ms=3500){ const t=$("toast"); t.textContent=msg; t.style.display="block"; setTimeout(()=>t.style.display="none", ms); }
+function token(){ return localStorage.getItem("ap_gh_token") || ""; }
+function keyState(){ $("keyState").textContent = token() ? "Command key saved on this device — buttons are live." : "No command key on this device — viewing works, buttons need the key (tap 🔑 Command key)."; }
+
+async function fetchRepoFile(path, cdnUrl){
+  // Fresh path first: GitHub API serves the data-branch file with no CDN
+  // cache (jsDelivr's branch cache went stale for 17+ min on 2026-11-19).
+  // Uses the saved command key when present (5,000 req/hr); anonymous
+  // works too at a lower rate. CDN is only the fallback.
+  try{
+    const h = {Accept:"application/vnd.github.raw+json"};
+    if(token()) h.Authorization = "Bearer " + token();
+    const r = await fetch(API + path + "?ref=data", {headers:h, cache:"no-store"});
+    if(r.ok) return await r.json();
+    throw new Error("api " + r.status);
+  }catch(e){
+    const r = await fetch(cdnUrl + "?_=" + Date.now());
+    if(!r.ok) throw new Error(r.status);
+    return await r.json();
+  }
+}
+
+const STREAM_K = new URLSearchParams(location.search).get("k") || "";
+let ES = null;
+function ensureStream(){
+  if(!STREAM_K || ES) return;
+  try{
+    ES = new EventSource("https://alphapilot-live.thealphatradingpro.workers.dev/stream?k=" + encodeURIComponent(STREAM_K));
+    ES.onmessage = ev => { try{ SNAP = JSON.parse(ev.data); render(); }catch(e){} };
+    ES.onerror = () => { try{ ES.close(); }catch(e){} ES = null; };
+  }catch(e){ ES = null; }
+}
+setInterval(()=>{ if(UNLOCKED) ensureStream(); }, 2000);
+async function loadSnap(){
+  try{
+    SNAP = await fetchRepoFile("data.json", DATA_URL);
+    render();
+  }catch(e){ if(!SNAP) $("snapLine").textContent = "Could not load data.json — " + e.message; }
+}
+function fmtTime(iso){ try{ return new Date(iso).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); }catch(e){ return ""; } }
+
+function render(){
+  if(!SNAP) return;
+  $("netLiq").textContent = money(SNAP.netLiq);
+  const dp = $("dayPnl"); dp.textContent = money(SNAP.dayPnL); dp.className = cls(SNAP.dayPnL||0);
+  const ageMin = (Date.now() - new Date(SNAP.collectedAt).getTime())/60000;
+  $("snapLine").innerHTML = "Snapshot " + fmtTime(SNAP.collectedAt) + (ageMin>3 ? ' · <span class="stale">STALE (' + Math.round(ageMin) + ' min)</span>' : " · live");
+  const g = SNAP.gateway||{};
+  const pa = (SNAP.systems||{}).postedAlerts||{}, pab = (SNAP.systems||{}).postedBearish||{}, pb = (SNAP.systems||{}).playbook||{};
+  $("dots").innerHTML =
+    '<span class="dot">Gateway <b class="'+(g.status==="live"?"on":"off")+'">● '+(g.label||g.status||"—")+'</b></span>' +
+    '<span class="dot">Posted Alerts <b class="'+(pa.status==="running"?"on":"off")+'">● '+(pa.status||"—")+'</b></span>' +
+    '<span class="dot">Posted Alerts — Bearish <b class="'+(pab.status==="running"?"on":"off")+'">● '+(pab.status||"—")+'</b></span>' +
+    '<span class="dot">Playbook <b class="'+(pb.status==="scanning"||pb.status==="idle"?"on":"off")+'">● '+(pb.status||"—")+'</b></span>';
+  const pos = SNAP.positions||[];
+  const renderPos = list => list.length ? list.map(p =>
+    '<div class="pos"><div><b>'+p.ticker+'</b> '+p.strike+p.right+' · exp '+p.expiry+' ×'+(+p.qty)+
+    (p.adopted?' <span class="tag">adopted</span>':"")+(p.locked?' <span class="tag">locked</span>':"")+
+    '<br><span class="mut">'+(+p.entry).toFixed(2)+' → '+(+p.mark).toFixed(4)+(p.stopPx?' · stop '+p.stopPx:"")+' · in '+fmtTime(p.enteredAt)+'</span></div>'+
+    '<div class="pl '+cls(p.unrealizedPnL)+'">'+money(p.unrealizedPnL)+'<span>'+(p.pnlPct>=0?"+":"")+p.pnlPct+'%</span>'+
+    '<span style="display:flex;gap:5px;margin-top:5px">'+((p.style==="posted"||p.style==="postedBearish")?'<button data-be="'+p.occ+'" data-on="'+(p.beOn?1:0)+'" title="Early breakeven at +10% \u2014 this trade only" style="'+(p.beOn?'background:#14532d;border-color:#22c55e;color:#bbf7d0':'')+'">BE +10%</button>':"")+((+p.qty)>1?'<button data-close1="'+p.occ+'">Close 1</button>':"")+
+    '<button data-close="'+p.occ+'">'+((+p.qty)>1?"Close all":"Close")+'</button></span></div></div>').join("")
+    : '<div class="mut" style="padding:6px 0">No open positions right now</div>';
+  $("posPosted").innerHTML = renderPos(pos.filter(p=>p.style==="posted"));
+  $("posPostedBearish").innerHTML = renderPos(pos.filter(p=>p.style==="postedBearish"));
+  $("posPlaybook").innerHTML = renderPos(pos.filter(p=>p.style==="playbook"));
+  $("posSpy").innerHTML = renderPos(pos.filter(p=>p.style==="spyvwap"));
+  $("posStyle4").innerHTML = renderPos(pos.filter(p=>p.style==="style4"));
+  const other = pos.filter(p=>p.style!=="posted"&&p.style!=="postedBearish"&&p.style!=="playbook"&&p.style!=="spyvwap"&&p.style!=="style4");
+  $("posOther").innerHTML = other.length ? '<div class="mut" style="margin:12px 0 6px">UNASSIGNED</div>' + renderPos(other) : "";
+  const oo = SNAP.openOrders||[];
+  $("openOrders").innerHTML = oo.length ? oo.map(o =>
+    '<div class="pos"><div><b>'+o.action+'</b> '+o.contractLabel+' ×'+(+o.qty)+
+    '<br><span class="mut">'+(+o.filled)+' of '+(+o.qty)+' filled · '+o.status+(o.limitPrice?' · limit '+(+o.limitPrice):"")+'</span></div>'+
+    '<div style="text-align:right"><div class="pl" style="color:#fbbf24">waiting</div>' +
+    '<button data-cancel="' + o.occ + '" data-oaction="' + o.action + '" style="margin-top:6px;padding:5px 10px;font-size:12px">Cancel</button>' +
+    (o.action==="SELL" ? '<button data-resell="' + o.occ + '" data-permid="' + (o.permId||"") + '" style="margin-top:6px;margin-left:6px;padding:5px 10px;font-size:12px">⟳ Re-sell at market</button>' : "") +
+    '</div></div>').join("")
+    : '<div class="mut" style="padding:6px 0">No orders waiting — everything is filled</div>';
+  document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => {
+    const p = pos.find(x=>x.occ===b.dataset.close);
+    confirmAction("Close " + p.ticker + " " + p.strike + p.right + "?",
+      "Market sell ALL " + (+p.qty) + " contract(s) at the broker (paper). Entry " + (+p.entry).toFixed(2) + ", current P/L " + money(p.unrealizedPnL) + ". This cannot be undone.",
+      {type:"close", occ:p.occ});
+  });
+  document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = () => {
+    const o = oo.find(x=>x.occ===b.dataset.cancel && x.action===b.dataset.oaction);
+    if(!o) return;
+    confirmAction("Cancel this order?",
+      "Cancel the " + o.action + " " + o.contractLabel + " \u00d7" + (+o.qty) + " waiting order at the broker (paper)" + (o.limitPrice ? " \u00b7 limit " + (+o.limitPrice) : "") + ". This does NOT close any position \u2014 it only kills the unfilled order. If the system's signal still stands, it may place a new order.",
+      {type:"cancel", occ:o.occ, action:o.action, permId:o.permId||null});
+  });
+  document.querySelectorAll("[data-resell]").forEach(b => b.onclick = () => {
+    const o = oo.find(x=>x.occ===b.dataset.resell);
+    if(!o) return;
+    confirmAction("Re-sell at market — " + o.contractLabel + "?",
+      "Cancels the stuck SELL order and places a FRESH market sell for the position (paper). If the stuck sell fills first, nothing double-sells — the engine re-checks the broker before selling.",
+      {type:"resell", occ:o.occ, permId:o.permId||null});
+  });
+  document.querySelectorAll("[data-close1]").forEach(b => b.onclick = () => {
+    const p = pos.find(x=>x.occ===b.dataset.close1);
+    confirmAction("Close 1 of " + (+p.qty) + " — " + p.ticker + " " + p.strike + p.right + "?",
+      "Market sell just 1 contract at the broker (paper), leaving " + ((+p.qty)-1) + " open. Entry " + (+p.entry).toFixed(2) + ", current P/L " + money(p.unrealizedPnL) + ". This cannot be undone.",
+      {type:"close", occ:p.occ, qty:1});
+  });
+  document.querySelectorAll("[data-be]").forEach(b => b.onclick = () => {
+    const p = pos.find(x=>x.occ===b.dataset.be);
+    if(!p) return;
+    const on = b.dataset.on !== "1";
+    confirmAction((on?"Turn ON":"Turn OFF") + " early breakeven \u2014 " + p.ticker + " " + p.strike + p.right + "?",
+      on ? "This trade only: its stop moves to breakeven (" + (+p.entry).toFixed(2) + ") once it has traded +10%. The rest of the ladder keeps running on top. Turn it off anytime and it goes straight back to the classic rules."
+         : "This trade goes back to the classic ladder rules \u2014 breakeven only at the +25% step.",
+      {type:"be", occ:p.occ, on});
+  });
+  if(!viewDate) renderTrades(SNAP.tradeLog||[], "TODAY");
+  const pausedPosted = pa.status === "paused";
+  const pausedPostedB = pab.status === "paused";
+  const pausedPb = pb.status === "paused";
+  const sv = (SNAP.systems||{}).spyVwap||{};
+  const s4 = (SNAP.systems||{}).style4||{};
+  const svTag = sv.status === "running" ? "Running · paper"
+    : sv.status === "paused" ? "Paused"
+    : sv.status === "awaiting-vwap-check" ? "Starts Mon · VWAP check first"
+    : "Off";
+  const svPaused = !!sv.paused, s4Paused = !!s4.paused;
+  const swHtml = (style, paused) => '<button class="sw '+(paused?"off":"on")+'" data-toggle="'+style+'" data-on="'+(paused?"0":"1")+'" role="switch" aria-checked="'+(paused?"false":"true")+'"><span class="swtx">'+(paused?"OFF":"ON")+'</span><span class="knob"></span></button>';
+  const svTag2 = svPaused ? "OFF — will not trade until you turn it back ON" : svTag;
+  const s4Tag = s4Paused ? "OFF — will not trade until you turn it back ON" : (s4.locked ? svTag : "Not locked");
+  $("systems").innerHTML =
+    '<div class="sys"><span><b>Posted Alerts</b><br><span class="mut">⭐ top-strike · 2 contracts · ladder exits · 3:55pm ET flatten</span></span>' +
+    '<button class="sw '+(pausedPosted?"off":"on")+'" data-toggle="posted" data-on="'+(pausedPosted?"0":"1")+'" role="switch" aria-checked="'+(pausedPosted?"false":"true")+'"><span class="swtx">'+(pausedPosted?"OFF":"ON")+'</span><span class="knob"></span></button></div>' +
+    '<div class="sys"><span><b>Posted Alerts — Bearish</b><br><span class="mut">⭐ top-strike · 2 contracts · ladder exits · 3:55pm ET flatten · puts</span></span>' +
+    '<button class="sw '+(pausedPostedB?"off":"on")+'" data-toggle="postedBearish" data-on="'+(pausedPostedB?"0":"1")+'" role="switch" aria-checked="'+(pausedPostedB?"false":"true")+'"><span class="swtx">'+(pausedPostedB?"OFF":"ON")+'</span><span class="knob"></span></button></div>' +
+    '<div class="sys"><span><b>Playbook VWAP Retest</b><br><span class="mut">14-name whitelist · 1 contract · 10–12 + 2–3:45 ET</span></span>' +
+    '<button class="sw '+(pausedPb?"off":"on")+'" data-toggle="playbook" data-on="'+(pausedPb?"0":"1")+'" role="switch" aria-checked="'+(pausedPb?"false":"true")+'"><span class="swtx">'+(pausedPb?"OFF":"ON")+'</span><span class="knob"></span></button></div>' +
+    '<div class="sys"><span><b>Style 3 — SPY VWAP Picture-Perfect</b>' + (sv.locked ? ' <span class="tag">🔒 LOCKED</span>' : '') + '<br><span class="mut">SPY 0DTE · entries at VWAP after a 0.40% proven move · ' + (sv.contracts||2) + ' contracts · no stop · trail +' + (sv.trailArmPct||10) + '% / ' + (sv.trailDistPts||5) + ' pts · out on VWAP close<br>Your call anytime: Close or Close 1 on any open position — your exit is never blocked<br>' + svTag2 + '</span></span>' +
+    swHtml("spyVwap", svPaused) + '</div>' +
+    '<div class="sys"><span><b>' + (s4.label||'Style 4 — SPY VWAP Every-Touch') + '</b>' + (s4.locked ? ' <span class="tag">🔒 LOCKED</span>' : ' <span class="tag">DRAFT</span>') + '<br><span class="mut">' + (s4.desc||'') + '<br>Backtest: ' + (s4.backtest||'—') + '<br>' + s4Tag + '</span></span>' +
+    swHtml("style4", s4Paused) + '</div>';
+  document.querySelectorAll("[data-toggle]").forEach(b => b.onclick = () => {
+    const style = b.dataset.toggle;
+    const label = style==="posted" ? "Posted Alerts" : style==="postedBearish" ? "Posted Alerts — Bearish" : style==="spyVwap" ? "Style 3 — SPY VWAP Picture-Perfect" : style==="style4" ? "Style 4 — SPY VWAP Every-Touch" : "Playbook VWAP Retest";
+    const pausing = b.dataset.on === "1";
+    const body = style==="postedBearish"
+      ? (pausing ? "Only new bearish entries stop. The trader keeps running — open bearish positions keep their ladder exits, and bullish Posted Alerts are not touched."
+                 : "Bearish entries open up again on the next ⭐ alert. The trader was never stopped.")
+      : (style==="spyVwap"||style==="style4")
+      ? (pausing ? "The style is switched OFF. It will not take trades — including Monday's start — until you turn it back ON." : "The style is ON and armed. It starts paper trading Monday after the live VWAP check passes.")
+      : (pausing ? "The engine stops taking new " + label + " trades. WARNING: pausing Posted Alerts also stops ladder exits on its open positions until resumed." : "The engine restarts and manages its positions again.");
+    confirmAction((pausing?"Turn OFF ":"Turn ON ") + label + "?",
+      body,
+      {type:(pausing?"pause":"resume"), style});
+  });
+  renderNames();
+  keyState();
+}
+
+const PB_NAMES = ["ACN","AMD","CRM","CRWD","FCX","HOOD","HPE","IBM","NBIS","NOW","OKTA","PANW","QCOM","TEAM"];
+let SET = {postedBlocked:[], playbookDisabled:[], playbookAlsoTrade:[]};
+let setPending = null;
+function setLists(){ return {postedBlocked:SET.postedBlocked.slice(), playbookDisabled:SET.playbookDisabled.slice(), playbookAlsoTrade:SET.playbookAlsoTrade.slice()}; }
+function saveSettings(){
+  setPending = {...setLists(), at: Date.now()};
+  sendCommand({type:"settings", ...setLists()});
+  renderNames();
+}
+function renderNames(){
+  if(SNAP && SNAP.settings){
+    const srv = {postedBlocked:(SNAP.settings.postedBlocked||[]).slice(), playbookDisabled:(SNAP.settings.playbookDisabled||[]).slice(), playbookAlsoTrade:(SNAP.settings.playbookAlsoTrade||[]).slice()};
+    if(setPending && JSON.stringify(srv) === JSON.stringify({postedBlocked:setPending.postedBlocked, playbookDisabled:setPending.playbookDisabled, playbookAlsoTrade:setPending.playbookAlsoTrade})) setPending = null;
+    if(setPending && Date.now() - setPending.at < 90000) SET = {postedBlocked:setPending.postedBlocked.slice(), playbookDisabled:setPending.playbookDisabled.slice(), playbookAlsoTrade:setPending.playbookAlsoTrade.slice()};
+    else { SET = srv; setPending = null; }
+  }
+  const tradingSet = new Set([...PB_NAMES, ...SET.playbookAlsoTrade].filter(t=>!SET.playbookDisabled.includes(t)));
+  const all = ((SNAP && SNAP.playbookWatchlist) || []).length ? SNAP.playbookWatchlist
+    : [...new Set([...PB_NAMES, ...SET.playbookAlsoTrade, ...SET.playbookDisabled])];
+  $("pbAll").innerHTML = all.map(t =>
+    "<button class='chip "+(tradingSet.has(t)?"on":"off")+"' data-name='"+t+"'>"+t+"</button>").join("");
+  $("postedBlocked").innerHTML = SET.postedBlocked.length
+    ? SET.postedBlocked.map(t => "<button class='chip blocked' data-unblock='"+t+"'>"+t+" ×</button>").join("")
+    : "<span class='mut'>None blocked — every alerted name can trade</span>";
+  document.querySelectorAll("[data-name]").forEach(b => b.onclick = () => {
+    const t = b.dataset.name;
+    if(tradingSet.has(t)) tradingSet.delete(t); else tradingSet.add(t);
+    SET.playbookDisabled = PB_NAMES.filter(x=>!tradingSet.has(x));
+    SET.playbookAlsoTrade = [...tradingSet].filter(x=>!PB_NAMES.includes(x));
+    saveSettings();
+  });
+  document.querySelectorAll("[data-unblock]").forEach(b => b.onclick = () => {
+    SET.postedBlocked = SET.postedBlocked.filter(x=>x!==b.dataset.unblock);
+    saveSettings();
+  });
+}
+$("blockBtn").addEventListener("click", () => {
+  const v = $("blockInput").value.trim().toUpperCase();
+  if(!/^[A-Z][A-Z0-9.\-]{0,7}$/.test(v)){ toast("Type a ticker first, like TSLA"); return; }
+  if(!SET.postedBlocked.includes(v)) SET.postedBlocked = [...SET.postedBlocked, v];
+  $("blockInput").value = "";
+  saveSettings();
+});
+
+function renderTrades(rows, label){
+  $("tradesDayLabel").textContent = label;
+  const closed = rows.filter(r=>!r.open);
+  const realized = closed.reduce((a,r)=>a+(r.pnl||0), 0);
+  $("tradesSummary").textContent = rows.length
+    ? closed.length + " closed · Realized " + money(Math.round(realized*100)/100) + (rows.length>closed.length ? " · " + (rows.length-closed.length) + " open" : "")
+    : "";
+  $("tradesBody").innerHTML = rows.map(r =>
+    "<tr><td>"+fmtTime(r.entryTime)+"</td><td><b>"+r.contractLabel+"</b> ×"+(+r.qty)+"</td>" +
+    "<td>in "+(+r.entry).toFixed(2)+" → "+(r.open ? "<b>open</b>" : "out "+(+r.exit).toFixed(2))+"</td>" +
+    "<td class='"+(r.pnl==null?"":cls(r.pnl))+"'>"+(r.pnl==null?"—":money(r.pnl))+"</td>" +
+    "<td class='mut'>"+(r.reason||"")+"</td></tr>").join("")
+    || "<tr><td class='mut'>No trades recorded for this day</td></tr>";
+}
+function setDayButtons(){
+  $("dayToday").classList.toggle("on", !viewDate);
+  $("dayYday").classList.toggle("on", !!viewDate && viewDate === ydayStr());
+  if(!viewDate) $("dayPick").value = "";
+}
+function ydayStr(){
+  const base = (SNAP && SNAP.date) || new Date().toISOString().slice(0,10);
+  const d = new Date(base + "T12:00:00Z"); d.setUTCDate(d.getUTCDate()-1);
+  return d.toISOString().slice(0,10);
+}
+async function showDay(dateStr){
+  viewDate = dateStr; setDayButtons();
+  if(histCache[dateStr]){ renderTrades(histCache[dateStr].tradeLog||[], dateStr); return; }
+  $("tradesBody").innerHTML = "<tr><td class='mut'>Loading…</td></tr>";
+  $("tradesDayLabel").textContent = dateStr;
+  try{
+    const j = await fetchRepoFile("history/" + dateStr + ".json",
+      "https://cdn.jsdelivr.net/gh/mankhem/alphapilot-data@data/history/" + dateStr + ".json");
+    histCache[dateStr] = j;
+    if(viewDate === dateStr) renderTrades(j.tradeLog||[], dateStr);
+  }catch(e){
+    if(viewDate === dateStr) renderTrades([], dateStr);
+  }
+}
+$("dayToday").addEventListener("click", ()=>{ viewDate = null; setDayButtons(); if(SNAP) renderTrades(SNAP.tradeLog||[], "TODAY"); });
+$("dayYday").addEventListener("click", ()=> showDay(ydayStr()));
+$("dayPick").addEventListener("change", e=>{ if(e.target.value) showDay(e.target.value); });
+
+let pendingLabel = "";
+function confirmAction(title, body, cmd){
+  pendingAction = cmd;
+  pendingLabel = title.replace(/\?$/,"");
+  $("modalTitle").textContent = title;
+  $("modalBody").textContent = body;
+  $("modal").style.display = "flex";
+}
+$("modalCancel").onclick = () => { $("modal").style.display="none"; pendingAction=null; pendingLabel=""; };
+$("modalOk").onclick = async () => {
+  $("modal").style.display="none";
+  if(pendingAction) await sendCommand(pendingAction, pendingLabel);
+  pendingAction = null;
+  pendingLabel = "";
+};
+$("flattenBtn").onclick = () => {
+  const n = (SNAP&&SNAP.positions||[]).length;
+  confirmAction("FLATTEN ALL — close every position?",
+    "Market sell ALL " + n + " open position(s) at the broker (paper). This cannot be undone.", {type:"flatten"});
+};
+$("refreshBtn").onclick = async () => { toast("Refreshing…"); await loadSnap(); await loadCmdLog(); toast("Updated " + new Date().toLocaleTimeString()); };
+$("keyBtn").onclick = () => {
+  const cur = token();
+  const v = prompt("Command key (GitHub fine-grained token for this repo only). It stays ONLY in this browser on this device — never in the site code. Leave empty to remove.", cur ? "••••••••" : "");
+  if(v === null) return;
+  if(v === "" ){ localStorage.removeItem("ap_gh_token"); toast("Command key removed from this device."); }
+  else if(v !== "••••••••"){ localStorage.setItem("ap_gh_token", v.trim()); toast("Command key saved on this device."); }
+  keyState();
+};
+
+async function ghGet(path){
+  const rr = await fetch(API + path + "?ref=data", {cache:"no-store", headers:{Authorization:"Bearer " + token(), Accept:"application/vnd.github.raw+json"}});
+  if(!rr.ok) throw new Error("GitHub read " + rr.status);
+  const data = await rr.json();
+  const tr = await fetch("https://api.github.com/repos/" + REPO + "/git/trees/data", {cache:"no-store", headers:{Authorization:"Bearer " + token(), Accept:"application/vnd.github+json"}});
+  if(!tr.ok) throw new Error("GitHub read " + tr.status);
+  const tj = await tr.json();
+  const entry = (tj.tree || []).find(e => e.path === path);
+  if(!entry) throw new Error("GitHub read: no sha for " + path);
+  return {data, sha: entry.sha};
+}
+async function ghPut(path, data, sha, msg){
+  const r = await fetch(API + path, {method:"PUT", headers:{Authorization:"Bearer " + token(), Accept:"application/vnd.github+json"},
+    body: JSON.stringify({message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 1)))), sha, branch:"data"})});
+  if(!r.ok) throw new Error("GitHub write " + r.status);
+  return r.json();
+}
+async function sendCommand(cmd, label){
+  if(!token()){ toast("Set the command key first (🔑 button)."); return; }
+  toast("Sending command…");
+  const full = {id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), ts: new Date().toISOString(), status:"pending", ...cmd};
+  let lastErr = null;
+  for(let attempt = 1; attempt <= 5; attempt++){
+    try{
+      const {data, sha} = await ghGet("commands.json");
+      data.commands = data.commands || [];
+      if(data.commands.some(c => c.id === full.id)){ lastErr = null; break; }
+      data.commands.push(full);
+      await ghPut("commands.json", data, sha, "alphapilot command " + full.type);
+      lastErr = null;
+      break;
+    }catch(e){
+      lastErr = e;
+      await new Promise(res => setTimeout(res, 1200 * attempt));
+    }
+  }
+  if(lastErr){ pill("bad", "✗ " + (label || cmd.type) + " — could not send: " + lastErr.message + " — tap again to retry."); return; }
+  fetch("https://purge.jsdelivr.net/gh/mankhem/alphapilot-data@data/commands.json").catch(()=>{});
+  watchCommand(full.id, label || cmd.type, cmd);
+  setTimeout(loadCmdLog, 4000); setTimeout(loadCmdLog, 16000); setTimeout(()=>{loadCmdLog(); loadSnap();}, 32000);
+}
+let pillTimer = null;
+function pill(state, msg, holdMs){
+  const p = $("cmdPill"); if(!p) return;
+  const colors = {wait:["#451a03","#fbbf24"], ok:["#052e16","#4ade80"], bad:["#450a0a","#f87171"]};
+  const c = colors[state] || colors.wait;
+  p.style.display = "block"; p.style.background = c[0]; p.style.color = c[1]; p.style.borderColor = c[1];
+  p.textContent = msg;
+  if(pillTimer) clearTimeout(pillTimer);
+  if(holdMs) pillTimer = setTimeout(()=>{ p.style.display = "none"; }, holdMs);
+}
+async function watchCommand(id, label, cmd){
+  pill("wait", "⏳ " + label + " — sent, waiting for the engine…");
+  let baseQty = null;
+  if(cmd.type === "close" && SNAP && SNAP.positions){
+    const bp = SNAP.positions.find(x => x.occ === cmd.occ);
+    baseQty = bp ? Math.abs(+bp.qty) : 0;
+  }
+  let result = null;
+  for(let i = 0; i < 40 && !result; i++){
+    await new Promise(r => setTimeout(r, 4000));
+    try{
+      const j = await fetchRepoFile("commands.json", CMDS_URL);
+      const c = (j.commands || []).find(x => x.id === id);
+      if(c && c.status === "done") result = c.result || "done";
+    }catch(e){}
+    loadCmdLog();
+  }
+  if(!result){ pill("wait", "⏳ " + label + " — still waiting. Check the command log below.", 20000); return; }
+  if(result.indexOf("FAILED") !== 0){ pill("ok", "✓ " + label + " — " + result, 20000); loadSnap(); return; }
+  if(cmd.type === "close"){
+    // Paper fills often land after the 30s window the commander watches.
+    // Keep an eye on the position itself before calling it failed.
+    pill("wait", "⏳ " + label + " — order working at the broker, watching for the fill…");
+    for(let i = 0; i < 30; i++){
+      await new Promise(r => setTimeout(r, 5000));
+      try{
+        const d = await fetchRepoFile("data.json", DATA_URL);
+        const p = (d.positions || []).find(x => x.occ === cmd.occ);
+        const q = p ? Math.abs(+p.qty) : 0;
+        if(baseQty === null || q < baseQty){ pill("ok", "✓ " + label + " — filled (confirmed at the broker)", 20000); loadSnap(); return; }
+      }catch(e){}
+    }
+  }
+  pill("bad", "✗ " + label + " — " + result, 25000);
+}
+async function loadCmdLog(){
+  try{
+    const j = await fetchRepoFile("commands.json", CMDS_URL);
+    const today = (SNAP&&SNAP.date) || "";
+    const list = (j.commands||[]).filter(c => (c.ts||"").slice(0,10) === new Date().toISOString().slice(0,10)).slice(-8).reverse();
+    $("cmdLog").innerHTML = list.length ? list.map(c =>
+      "<div>" + fmtTime(c.ts) + " · <b>" + c.type + "</b> " + (c.occ||c.style||"") + " → " + c.status + (c.result ? " · " + c.result : "") + "</div>").join("")
+      : "No commands yet today.";
+  }catch(e){}
+}
+const CODE_HASH = "61acd0047ef409952e497192d1601bee0fba9e0df744ed30ec9d16b8f3805ad6";
+let UNLOCKED = localStorage.getItem("ap_unlocked") === CODE_HASH;
+async function sha256(txt){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function tryCodeUnlock(){
+  const v = $("lockCode").value.trim();
+  if(!v) return;
+  if(await sha256(v) === CODE_HASH){
+    localStorage.setItem("ap_unlocked", CODE_HASH);
+    UNLOCKED = true;
+    $("lock").style.display = "none";
+    loadSnap(); loadCmdLog();
+  } else {
+    $("lockErr").textContent = "Wrong code — try again.";
+    $("lockCode").value = "";
+  }
+}
+// ---- Password unlock (alpha, 2026-11-19): the command key sealed with
+// a password he chooses, so ANY device unlocks with the password alone.
+// The sealed envelope (keyblob.json, public) is useless without it.
+const PUB_REPO = "mankhem/alphapilot";
+let BLOB = null, LOCK_MODE = "password";
+const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const b64d = s => Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
+async function deriveKey(pw, salt){
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:250000, hash:"SHA-256"}, base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function encryptWithPassword(pw, plaintext){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pw, salt);
+  const ct = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(plaintext));
+  return {v:1, salt:b64e(salt), iv:b64e(iv), ct:b64e(ct)};
+}
+async function decryptWithPassword(pw, blob){
+  const key = await deriveKey(pw, b64d(blob.salt));
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(blob.iv)}, key, b64d(blob.ct));
+  return new TextDecoder().decode(pt);
+}
+async function tryUnlock(){
+  if(LOCK_MODE === "code") return tryCodeUnlock();
+  const pw = $("lockPass").value;
+  if(!pw) return;
+  if(!BLOB){ $("lockErr").textContent = "No password set yet — use the code link below, then set a password on the PC."; return; }
+  try{
+    const tok = await decryptWithPassword(pw, BLOB);
+    if(!tok.startsWith("github_pat_") && !tok.startsWith("ghp_")) throw new Error("bad token");
+    localStorage.setItem("ap_gh_token", tok);
+    localStorage.setItem("ap_unlocked", CODE_HASH);
+    UNLOCKED = true;
+    $("lock").style.display = "none";
+    $("lockPass").value = "";
+    loadSnap(); loadCmdLog();
+  }catch(e){
+    $("lockErr").textContent = "Wrong password — try again.";
+    $("lockPass").value = "";
+  }
+}
+function showCodeInputs(){
+  LOCK_MODE = "code";
+  $("lockLabel").textContent = "Enter your code";
+  $("lockPass").style.display = "none";
+  $("lockCode").style.display = "";
+  $("codeModeLink").style.display = "none";
+  setTimeout(()=>$("lockCode").focus(), 100);
+}
+$("codeModeLink").addEventListener("click", e => { e.preventDefault(); showCodeInputs(); });
+$("lockBtn").addEventListener("click", tryUnlock);
+$("lockPass").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+$("lockCode").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+// ---- Set / change the app password (needs the key saved on this device)
+async function putMainFile(path, obj){
+  let sha = null;
+  const tr = await fetch("https://api.github.com/repos/" + PUB_REPO + "/git/trees/main", {cache:"no-store", headers:{Authorization:"Bearer " + token(), Accept:"application/vnd.github+json"}});
+  if(tr.ok){ const tj = await tr.json(); const e = (tj.tree||[]).find(x=>x.path===path); if(e) sha = e.sha; }
+  const body = {message:"AlphaPilot app password envelope", branch:"main",
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(obj))))};
+  if(sha) body.sha = sha;
+  const r = await fetch("https://api.github.com/repos/" + PUB_REPO + "/contents/" + path,
+    {method:"PUT", headers:{Authorization:"Bearer " + token(), Accept:"application/vnd.github+json"}, body: JSON.stringify(body)});
+  if(!r.ok) throw new Error("GitHub write " + r.status);
+}
+$("pwBtn").addEventListener("click", () => {
+  if(!token()){ toast("First save your command key on this device (🔑 Command key), then set the password."); return; }
+  $("pwErr").textContent = ""; $("pwNew1").value = ""; $("pwNew2").value = "";
+  $("pwModal").style.display = "flex";
+});
+$("pwCancelBtn").addEventListener("click", () => $("pwModal").style.display = "none");
+$("pwSetBtn").addEventListener("click", async () => {
+  const p1 = $("pwNew1").value, p2 = $("pwNew2").value;
+  if(p1.length < 8){ $("pwErr").textContent = "Password needs at least 8 characters."; return; }
+  if(p1 !== p2){ $("pwErr").textContent = "Passwords don't match."; return; }
+  try{
+    const blob = await encryptWithPassword(p1, token());
+    await putMainFile("keyblob.json", blob);
+    BLOB = blob;
+    $("pwModal").style.display = "none";
+    toast("Password set ✓ — any device can now unlock with it.");
+  }catch(e){ $("pwErr").textContent = "Could not save: " + e.message; }
+});
+if(UNLOCKED && token()){ loadSnap(); loadCmdLog(); }
+else {
+  // Unlocked-but-keyless device (e.g. code used before the password
+  // existed): ask for the password, never the raw command key.
+  UNLOCKED = false;
+  $("lock").style.display = "flex";
+  fetch("keyblob.json", {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(b => {
+    BLOB = b;
+    if(b) setTimeout(()=>$("lockPass").focus(), 100);
+    else showCodeInputs();
+  }).catch(() => showCodeInputs());
+}
+setInterval(()=>{ if(UNLOCKED){ ensureStream(); loadSnap(); loadCmdLog(); } }, 10000);
+</script>
+</body>
+</html>
