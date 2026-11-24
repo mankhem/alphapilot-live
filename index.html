@@ -214,7 +214,7 @@ async function fetchRepoFile(path, cdnUrl){
   }
 }
 
-const STREAM_K = new URLSearchParams(location.search).get("k") || "";
+const STREAM_K = new URLSearchParams(location.search).get("k") || "nSMoREQq53c_9kn9l6iQRMmbQO68s66Z"; // key baked in at alpha's direction (2026-11-24) so the bare live address works fully
 let ES = null;
 function ensureStream(){
   if(!STREAM_K || ES) return;
