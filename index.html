@@ -30,6 +30,8 @@
   .rowbtns button{flex:1;padding:11px}
   table{width:100%;border-collapse:collapse;font-size:13px}
   td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+  .haslegs td{border-bottom:none}
+  .legs td{color:var(--mut);font-size:12px;padding:0 4px 6px 16px}
   .g{color:var(--grn)} .r{color:var(--red)}
   .sys{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
   .sw{position:relative;width:62px;height:30px;border-radius:15px;border:1px solid var(--line);background:#343945;cursor:pointer;padding:0;flex:none}
@@ -400,11 +402,21 @@ function renderTrades(rows, label){
   $("tradesSummary").textContent = rows.length
     ? closed.length + " closed · Realized " + money(Math.round(realized*100)/100) + (rows.length>closed.length ? " · " + (rows.length-closed.length) + " open" : "")
     : "";
-  $("tradesBody").innerHTML = rows.map(r =>
-    "<tr><td>"+fmtTime(r.entryTime)+"</td><td><b>"+r.contractLabel+"</b> ×"+(+r.qty)+"</td>" +
+  $("tradesBody").innerHTML = rows.map(r => {
+    // Exit legs (alpha, 2026-11-25): a blended in -> out average hides
+    // split exits ("i was out 2 and 2") -- when the pusher attached 2+
+    // exit legs to a closed row, list each leg under the summary line.
+    const legs = (!r.open && Array.isArray(r.exits) && r.exits.length > 1)
+      ? "<tr class='legs'><td colspan='5'>" + r.exits.map(e =>
+          "↳ out ×"+(+e.qty)+" @ "+(+e.price).toFixed(2) +
+          (e.reason ? " · "+e.reason : "") + " · " + fmtTime(e.time)
+        ).join("<br>") + "</td></tr>"
+      : "";
+    return "<tr"+(legs ? " class='haslegs'" : "")+"><td>"+fmtTime(r.entryTime)+"</td><td><b>"+r.contractLabel+"</b> ×"+(+r.qty)+"</td>" +
     "<td>in "+(+r.entry).toFixed(2)+" → "+(r.open ? "<b>open</b>" : "out "+(+r.exit).toFixed(2))+"</td>" +
     "<td class='"+(r.pnl==null?"":cls(r.pnl))+"'>"+(r.pnl==null?"—":money(r.pnl))+"</td>" +
-    "<td class='mut'>"+(r.reason||"")+"</td></tr>").join("")
+    "<td class='mut'>"+(r.reason||"")+"</td></tr>" + legs;
+  }).join("")
     || "<tr><td class='mut'>No trades recorded for this day</td></tr>";
 }
 function setDayButtons(){
