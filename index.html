@@ -306,7 +306,7 @@ function render(){
          : "This trade goes back to the classic ladder rules \u2014 breakeven only at the +25% step.",
       {type:"be", occ:p.occ, on});
   });
-  if(!viewDate) renderTrades(SNAP.tradeLog||[], "TODAY");
+  if(!viewDate) renderToday();
   const pausedPosted = pa.status === "paused";
   const pausedPostedB = pab.status === "paused";
   const pausedPb = pb.status === "paused";
@@ -412,13 +412,24 @@ function setDayButtons(){
   $("dayYday").classList.toggle("on", !!viewDate && viewDate === ydayStr());
   if(!viewDate) $("dayPick").value = "";
 }
+function todayStr(){
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York"}).format(new Date());
+}
+function renderToday(){
+  // The snapshot's tradeLog belongs to SNAP.date. Before the pusher's
+  // first run of a new day that date is YESTERDAY -- showing its trades
+  // under TODAY mislabels them (alpha, 2026-11-25). Today stays empty
+  // until a snapshot dated today exists.
+  if(SNAP && SNAP.date === todayStr()) renderTrades(SNAP.tradeLog||[], "TODAY");
+  else renderTrades([], "TODAY");
+}
 function ydayStr(){
-  const base = (SNAP && SNAP.date) || new Date().toISOString().slice(0,10);
-  const d = new Date(base + "T12:00:00Z"); d.setUTCDate(d.getUTCDate()-1);
+  const d = new Date(todayStr() + "T12:00:00Z"); d.setUTCDate(d.getUTCDate()-1);
   return d.toISOString().slice(0,10);
 }
 async function showDay(dateStr){
   viewDate = dateStr; setDayButtons();
+  if(SNAP && dateStr === SNAP.date){ renderTrades(SNAP.tradeLog||[], dateStr); return; }
   if(histCache[dateStr]){ renderTrades(histCache[dateStr].tradeLog||[], dateStr); return; }
   $("tradesBody").innerHTML = "<tr><td class='mut'>Loading…</td></tr>";
   $("tradesDayLabel").textContent = dateStr;
@@ -431,7 +442,7 @@ async function showDay(dateStr){
     if(viewDate === dateStr) renderTrades([], dateStr);
   }
 }
-$("dayToday").addEventListener("click", ()=>{ viewDate = null; setDayButtons(); if(SNAP) renderTrades(SNAP.tradeLog||[], "TODAY"); });
+$("dayToday").addEventListener("click", ()=>{ viewDate = null; setDayButtons(); renderToday(); });
 $("dayYday").addEventListener("click", ()=> showDay(ydayStr()));
 $("dayPick").addEventListener("change", e=>{ if(e.target.value) showDay(e.target.value); });
 
