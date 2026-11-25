@@ -675,13 +675,23 @@ $("pwSetBtn").addEventListener("click", async () => {
     toast("Password set ✓ — any device can now unlock with it.");
   }catch(e){ $("pwErr").textContent = "Could not save: " + e.message; }
 });
-// Lock removed on the live address at alpha's direction (2026-11-24,
-// "nobody has this site"): the page opens straight in. The stream key
-// in his personal link (?k=) is what feeds the numbers; the buttons
-// still need the command key saved on this device. The old GitHub app
-// (mankhem.github.io/alphapilot) keeps its lock untouched.
-UNLOCKED = true;
-loadSnap(); loadCmdLog(); ensureStream();
+// Lock RESTORED on the live address (2026-11-25, alpha: "lets add
+// it") now that HTTPS is live and the browser unlock crypto works on
+// this origin. Same boot as the master app: saved key + remembered
+// unlock opens straight in; otherwise the lock screen asks for the
+// password (keyblob.json on this origin) or the 4-digit code.
+if(UNLOCKED && token()){ loadSnap(); loadCmdLog(); }
+else {
+  // Unlocked-but-keyless device (e.g. code used before the password
+  // existed): ask for the password, never the raw command key.
+  UNLOCKED = false;
+  $("lock").style.display = "flex";
+  fetch("keyblob.json", {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(b => {
+    BLOB = b;
+    if(b) setTimeout(()=>$("lockPass").focus(), 100);
+    else showCodeInputs();
+  }).catch(() => showCodeInputs());
+}
 setInterval(()=>{ if(UNLOCKED){ ensureStream(); loadSnap(); loadCmdLog(); } }, 10000);
 </script>
 </body>
